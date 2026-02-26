@@ -21,6 +21,10 @@ const Upload = ({ onComplete }: UploadProps) => {
       setProgress(0);
 
       const reader = new FileReader();
+      reader.onerror = () => {
+         setFile(null);
+         setProgress(0);
+      };;
 
       reader.onload = (event) => {
         const base64String = event.target?.result as string;
@@ -110,7 +114,7 @@ const Upload = ({ onComplete }: UploadProps) => {
                         "Click to upload or just drag and drop"
                     ): ("Sign in or sign up with Puter to upload")}
                     </p>
-                    <p className='help'>Maximum file size 50 MB.</p>
+                    <p className='help'>Maximum file size 10 MB.</p>
                 </div>
             </div>
         ) :(
