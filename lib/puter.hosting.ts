@@ -8,17 +8,19 @@ export const getOrCreateHostingConfig = async (): Promise<HostingConfig | null> 
   const existing = (await puter.kv.get(HOSTING_CONFIG_KEY)) as HostingConfig | null;
 
   // Return existing config if found
-  if (existing?.subdomain) {
-    return { subdomain: existing.subdomain };
+  if (existing?.subdomain) { return { subdomain: existing.subdomain };
   }
 
   const subdomain = createHostingSlug();
 
   try {
     const created = await puter.hosting.create(subdomain, ".");
+
     
 
-    return { subdomain: created.subdomain};
+    const record = { subdomain: created.subdomain};
+    await puter.kv.set(HOSTING_CONFIG_KEY, record);
+    return record
   } catch (e) {
     console.warn(`Could not create subdomain: ${e}`);
     return null;
@@ -26,7 +28,7 @@ export const getOrCreateHostingConfig = async (): Promise<HostingConfig | null> 
 };
 
 export const uploadImageToHosting = async ({hosting, url, projectId, label}: StoreHostedImageParams):
-Promise<HostedAsset | null> => {
+Promise<HostingAsset | null> => {
   if(!hosting || !url) return null;
   if(isHostedUrl(url)) return { url};
 

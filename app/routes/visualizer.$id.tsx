@@ -1,20 +1,55 @@
-import { useLocation } from "react-router";
+import { generate3DView } from "lib/ai.action";
+import { useEffect, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router";
 
-type LocationState = {
-  initialImage?: string;
-  name?: string;
-};
 
-const VisualizerId = () => {
+
+const VisualizerId = () => { 
+  const navigate = useNavigate();
   const location = useLocation();
-  const state = location.state as LocationState | null;
+  const {initialImage,initialRender,name} = location.state || {};
 
-  const { initialImage, name } = state || {};
+  const hasInitialGenerated = useRef(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [currentImage, setCurrentImage] = useState<string | null>(initialRender || null);
+
+  const handleBack = () => navigate('/');
+
+  const runGeneration = async () => {
+    if(!initialImage) return;
+     try{
+       setIsProcessing(true);
+       const result = await generate3DView({ sourceImage: initialImage});
+
+       if(result.renderedImage){
+        setCurrentImage(result.renderedImage);
+          // update the poject with the rendered image.
+       }
+     } catch(error){
+       console.error('Generation failed:',error)
+     } finally {
+       setIsProcessing(false)
+     }
+  }
+
+  useEffect(()=>{
+    if(!initialImage || hasInitialGenerated.current) return;
+
+    if(initialRender) {
+      setCurrentImage(initialRender);
+      hasInitialGenerated.current = true;
+      return;
+    }
+    hasInitialGenerated.current = true;
+    runGeneration();
+
+  },[initialImage,initialRender])
+
+
+
 
   return (
     <section>
-      <h1>{name || "Untitled Project"}</h1>
-
       <div className="visualizer">
         {initialImage && (
           <div className="image-container">
